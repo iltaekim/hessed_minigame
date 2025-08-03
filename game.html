@@ -121,16 +121,25 @@
         document.getElementById('count').innerText = selectionCount;
       };
 
-      // 페이지 로드 후 실행
+      // localStorage에 저장된 선택 상태 불러오기
+      const loadSelectionData = () => {
+        const data = localStorage.getItem('selections');
+        return data ? JSON.parse(data) : {};
+      };
+
+      // 선택 상태를 localStorage에 저장
+      const saveSelectionData = (data) => {
+        localStorage.setItem('selections', JSON.stringify(data));
+      };
+
       window.onload = () => {
         const grid = document.querySelector('.game-grid');
+        const savedData = loadSelectionData();
 
-        // 6개의 게임 카드를 생성
         for (let i = 1; i <= 6; i++) {
           const card = document.createElement('div');
           card.className = 'game-card';
 
-          // 게임 카드 내부 HTML 생성
           card.innerHTML = `
             <div class="game-title">게임 ${i}</div>
             <div class="game-image">
@@ -144,38 +153,47 @@
 
           const slots = card.querySelectorAll('.slot');
 
-          // 슬롯 클릭 이벤트 등록
-          slots.forEach(slot => {
+          // 초기 상태 로딩
+          if (savedData[i]) {
+            savedData[i].forEach((team, index) => {
+              if (team && teamColors[team]) {
+                slots[index].style.backgroundColor = teamColors[team];
+                slots[index].dataset.team = team;
+                if (team === myTeam) selectionCount++;
+              }
+            });
+          }
+
+          slots.forEach((slot, idx) => {
             slot.addEventListener('click', () => {
-              // 이 게임 내에 이미 본인 조가 선택한 슬롯이 있는지 확인
               const alreadySelectedByTeam = Array.from(slots).some(s => s.dataset.team === myTeam);
+              const selections = loadSelectionData();
+              selections[i] = selections[i] || [null, null, null, null];
 
               if (slot.dataset.team === myTeam) {
-                // 이미 선택한 슬롯을 다시 누르면 취소
                 slot.style.backgroundColor = '#fff';
                 delete slot.dataset.team;
+                selections[i][idx] = null;
                 selectionCount--;
-                updateStatus();
               } else if (!slot.dataset.team && !alreadySelectedByTeam) {
-                // 빈 슬롯이고 본인 조가 아직 이 게임에 선택하지 않았다면 선택 가능
                 if (selectionCount >= maxSelections) {
                   alert('최대 선택 가능 수를 초과했습니다.');
                   return;
                 }
                 slot.style.backgroundColor = teamColor;
                 slot.dataset.team = myTeam;
+                selections[i][idx] = myTeam;
                 selectionCount++;
-                updateStatus();
               }
-              // 그 외 상황 (다른 조가 선택한 슬롯 등)은 무시
+              saveSelectionData(selections);
+              updateStatus();
             });
           });
 
-          // 게임 카드를 그리드에 추가
           grid.appendChild(card);
         }
 
-        updateStatus(); // 초기 상태 표시
+        updateStatus();
       };
     </script>
   </div>
