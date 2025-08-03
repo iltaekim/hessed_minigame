@@ -166,7 +166,11 @@
       content.innerHTML = '';
       for (let game in selections) {
         const line = document.createElement('div');
-        const teams = selections[game].filter(Boolean).map(t => `${t}조`).join(', ');
+        const teams = (selections[game] || [])
+          .filter(Boolean)
+          .map(t => t.team ? `${t.team}조` : '')
+          .filter(t => t !== '')
+          .join(', ');
         line.innerText = `게임 ${game}: ${teams || '선택 없음'}`;
         content.appendChild(line);
       }
@@ -202,7 +206,7 @@
         `;
 
         const slots = card.querySelectorAll('.slot');
-        selections[i] = savedData[i] || [null, null, null, null];
+        selections[i] = Array.isArray(savedData[i]) ? savedData[i] : [null, null, null, null];
 
         slots.forEach((slot, idx) => {
           const team = selections[i][idx]?.team;
