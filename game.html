@@ -66,6 +66,11 @@
     const selectedTeam = localStorage.getItem('selectedTeam');
     const selectedColor = localStorage.getItem('selectedColor');
 
+    if (!selectedTeam || !selectedColor) {
+      alert('팀 정보가 없습니다. 처음 화면으로 돌아갑니다.');
+      window.location.href = 'index.html';
+    }
+
     const MAX_SELECTION_PER_TEAM = 4;
     const TOTAL_GAMES = 6;
     const SLOTS_PER_GAME = 3;
