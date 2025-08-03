@@ -24,7 +24,14 @@
     const countEl = document.getElementById("count");
     const summaryContent = document.getElementById("summary-content");
 
-    const myTeamId = prompt("당신의 조 번호를 입력하세요 (예: 1)");
+    // URL에서 팀 번호 파라미터 추출
+    const urlParams = new URLSearchParams(window.location.search);
+    const myTeamId = urlParams.get("team");
+    if (!myTeamId) {
+      alert("팀 번호가 전달되지 않았습니다. 처음 화면으로 돌아가세요.");
+      throw new Error("No team ID in URL");
+    }
+
     const teamColor = `hsl(${parseInt(myTeamId) * 40}, 70%, 50%)`;
     const totalGames = 8;
     const slotsPerGame = 4;
