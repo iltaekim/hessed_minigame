@@ -166,7 +166,7 @@
       content.innerHTML = '';
       for (let game in selections) {
         const line = document.createElement('div');
-        const teams = selections[game].filter(Boolean).map(t => `${t}조`).join(', ');
+        const teams = selections[game].filter(Boolean).map(t => `${t.team}조`).join(', ');
         line.innerText = `게임 ${game}: ${teams || '선택 없음'}`;
         content.appendChild(line);
       }
