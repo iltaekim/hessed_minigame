@@ -14,7 +14,13 @@
 
     h1 {
       text-align: center;
-      margin-bottom: 30px;
+      margin-bottom: 10px;
+    }
+
+    #status {
+      text-align: center;
+      font-size: 1.1em;
+      margin-bottom: 20px;
     }
 
     .game-grid {
@@ -92,22 +98,39 @@
 </head>
 <body>
   <h1>게임을 선택하세요</h1>
+  <div id="status">선택한 게임 수: <span id="count">0</span> / 4</div>
   <div class="game-grid">
     <script>
+      // 조별 색상 정의
       const teamColors = {
         1: '#e74c3c', 2: '#e67e22', 3: '#f1c40f',
         4: '#2ecc71', 5: '#3498db', 6: '#34495e',
         7: '#9b59b6', 8: '#fd79a8', 9: '#7f8c8d'
       };
+
+      // 사용자가 선택한 조 번호 가져오기
       const myTeam = localStorage.getItem('selectedTeam');
       const teamColor = teamColors[myTeam];
 
+      // 최대 선택 가능 수 설정
+      const maxSelections = 4;
+      let selectionCount = 0;
+
+      // 상단 선택 개수 상태 업데이트 함수
+      const updateStatus = () => {
+        document.getElementById('count').innerText = selectionCount;
+      };
+
+      // 페이지 로드 후 실행
       window.onload = () => {
         const grid = document.querySelector('.game-grid');
 
+        // 6개의 게임 카드를 생성
         for (let i = 1; i <= 6; i++) {
           const card = document.createElement('div');
           card.className = 'game-card';
+
+          // 게임 카드 내부 HTML 생성
           card.innerHTML = `
             <div class="game-title">게임 ${i}</div>
             <div class="game-image">
@@ -121,26 +144,38 @@
 
           const slots = card.querySelectorAll('.slot');
 
+          // 슬롯 클릭 이벤트 등록
           slots.forEach(slot => {
             slot.addEventListener('click', () => {
+              // 이 게임 내에 이미 본인 조가 선택한 슬롯이 있는지 확인
               const alreadySelectedByTeam = Array.from(slots).some(s => s.dataset.team === myTeam);
 
-              // 취소 조건: 내가 선택한 슬롯 다시 누름
               if (slot.dataset.team === myTeam) {
+                // 이미 선택한 슬롯을 다시 누르면 취소
                 slot.style.backgroundColor = '#fff';
                 delete slot.dataset.team;
-              }
-              // 선택 조건: 빈 슬롯이고 아직 해당 게임에 내가 참여하지 않았을 경우
-              else if (!slot.dataset.team && !alreadySelectedByTeam) {
+                selectionCount--;
+                updateStatus();
+              } else if (!slot.dataset.team && !alreadySelectedByTeam) {
+                // 빈 슬롯이고 본인 조가 아직 이 게임에 선택하지 않았다면 선택 가능
+                if (selectionCount >= maxSelections) {
+                  alert('최대 선택 가능 수를 초과했습니다.');
+                  return;
+                }
                 slot.style.backgroundColor = teamColor;
                 slot.dataset.team = myTeam;
+                selectionCount++;
+                updateStatus();
               }
-              // 그 외엔 무시 (다른 조가 선택했거나, 이미 한 슬롯 있음)
+              // 그 외 상황 (다른 조가 선택한 슬롯 등)은 무시
             });
           });
 
+          // 게임 카드를 그리드에 추가
           grid.appendChild(card);
         }
+
+        updateStatus(); // 초기 상태 표시
       };
     </script>
   </div>
