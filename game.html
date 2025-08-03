@@ -103,6 +103,28 @@
       container.appendChild(gameBox);
     }
 
+    // 초기 데이터 로딩
+    for (let gameId = 1; gameId <= TOTAL_GAMES; gameId++) {
+      for (let slotIndex = 0; slotIndex < SLOTS_PER_GAME; slotIndex++) {
+        db.ref(`selections/game${gameId}/slot${slotIndex}`).once('value')
+          .then(snapshot => {
+            const data = snapshot.val();
+            if (data) {
+              const slot = document.querySelector(`.slot[data-game-id="${gameId}"][data-index="${slotIndex}"]`);
+              if (slot) {
+                slot.classList.add('filled');
+                slot.style.backgroundColor = data.color;
+                slot.innerText = `${data.team}조`;
+                slot.dataset.team = data.team;
+
+                selections[gameId].push(data.team);
+                teamSelectionCount[data.team] = (teamSelectionCount[data.team] || 0) + 1;
+              }
+            }
+          });
+      }
+    }
+
     function handleSlotClick(slot) {
       const gameId = parseInt(slot.dataset.gameId);
       const slotIndex = slot.dataset.index;
@@ -121,7 +143,6 @@
         selections[gameId] = selections[gameId].filter(t => t != currentTeam);
         teamSelectionCount[currentTeam] = (teamSelectionCount[currentTeam] || 1) - 1;
 
-        // DB 반영
         db.ref(`selections/game${gameId}/slot${slotIndex}`).remove();
         return;
       }
@@ -138,7 +159,6 @@
 
       if (isFilled) return;
 
-      // 선택 처리
       slot.classList.add('filled');
       slot.style.backgroundColor = selectedColor;
       slot.innerText = `${currentTeam}조`;
@@ -148,7 +168,6 @@
       teamSelectionCount[currentTeam] = (teamSelectionCount[currentTeam] || 0) + 1;
       clearWarning();
 
-      // DB 반영
       db.ref(`selections/game${gameId}/slot${slotIndex}`).set({
         team: currentTeam,
         color: selectedColor
