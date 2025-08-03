@@ -156,12 +156,13 @@
     const teamColor = teamColors[myTeam];
     const maxSelections = 4;
     let selectionCount = 0;
+    const selections = {};
 
     const updateStatus = () => {
       document.getElementById('count').innerText = selectionCount;
     };
 
-    const updateSummary = (selections) => {
+    const updateSummary = () => {
       const content = document.getElementById('summary-content');
       content.innerHTML = '';
       for (let game in selections) {
@@ -176,24 +177,17 @@
       }
     };
 
-    const loadSelectionsFromDB = async () => {
-      const snapshot = await db.ref('selections').once('value');
-      return snapshot.val() || {};
-    };
-
     const saveSlotToDB = (gameId, slotIndex, team, color) => {
       db.ref(`selections/${gameId}/${slotIndex}`).set(team ? { team, color } : null);
     };
 
-    window.onload = async () => {
+    const createGameCards = () => {
       const grid = document.querySelector('.game-grid');
-      const savedData = await loadSelectionsFromDB();
-      const selections = {};
+      grid.innerHTML = '';
 
       for (let i = 1; i <= 6; i++) {
         const card = document.createElement('div');
         card.className = 'game-card';
-
         card.innerHTML = `
           <div class="game-title">게임 ${i}</div>
           <div class="game-image">
@@ -206,7 +200,7 @@
         `;
 
         const slots = card.querySelectorAll('.slot');
-        selections[i] = Array.isArray(savedData[i]) ? savedData[i] : [null, null, null, null];
+        selections[i] = selections[i] || [null, null, null, null];
 
         slots.forEach((slot, idx) => {
           const team = selections[i][idx]?.team;
@@ -238,16 +232,24 @@
               saveSlotToDB(i, idx, myTeam, teamColor);
             }
             updateStatus();
-            updateSummary(selections);
+            updateSummary();
           });
         });
 
         grid.appendChild(card);
       }
-
-      updateStatus();
-      updateSummary(selections);
     };
+
+    db.ref('selections').on('value', snapshot => {
+      const data = snapshot.val() || {};
+      for (let i = 1; i <= 6; i++) {
+        selections[i] = Array.isArray(data[i]) ? data[i] : [null, null, null, null];
+      }
+      selectionCount = 0;
+      createGameCards();
+      updateStatus();
+      updateSummary();
+    });
   </script>
 </body>
 </html>
