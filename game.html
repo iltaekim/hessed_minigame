@@ -10,24 +10,26 @@
       margin: 0;
       background-color: #f9f9f9;
       padding: 20px;
+      font-size: 18px; /* 전체 기본 폰트 크기 확대 */
     }
 
     h1 {
       text-align: center;
       margin-bottom: 10px;
+      font-size: 2.2em;
     }
 
     #status {
       text-align: center;
-      font-size: 1.1em;
+      font-size: 1.4em;
       margin-bottom: 20px;
     }
 
     .game-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-      max-width: 900px;
+      gap: 40px; /* 카드 간격 확대 */
+      max-width: 1400px;
       margin: 0 auto;
     }
 
@@ -43,21 +45,22 @@
     .game-title {
       background: #333;
       color: white;
-      padding: 10px;
+      padding: 18px;
       text-align: center;
-      font-size: 1.2em;
+      font-size: 1.8em;
       font-weight: bold;
     }
 
     .game-image {
       width: 100%;
-      height: 150px;
+      height: 320px; /* 이미지 영역 확대 */
       background: lightgray;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       position: relative;
+      font-size: 1.6em;
     }
 
     .game-image:hover .overlay {
@@ -77,39 +80,41 @@
       align-items: center;
       padding: 10px;
       text-align: center;
+      font-size: 1.4em;
     }
 
     .slots {
       display: flex;
       justify-content: center;
-      gap: 8px;
-      padding: 12px;
+      gap: 12px;
+      padding: 20px;
     }
 
     .slot {
-      width: 24px;
-      height: 24px;
+      width: 46px;
+      height: 46px;
       border-radius: 4px;
       background: #fff;
       border: 1px solid #ccc;
       cursor: pointer;
       position: relative;
       color: white;
-      font-size: 12px;
+      font-size: 18px;
       text-align: center;
-      line-height: 24px;
+      line-height: 46px;
       font-weight: bold;
     }
 
     #summary {
-      margin-top: 30px;
-      padding: 10px;
+      margin-top: 40px;
+      padding: 16px;
       background: #fff;
       border: 1px solid #ccc;
       border-radius: 6px;
       max-width: 800px;
       margin-left: auto;
       margin-right: auto;
+      font-size: 1.2em;
     }
 
     #summary h2 {
@@ -127,31 +132,38 @@
   </div>
 
   <script>
+    // 조 색상 설정
     const teamColors = {
       1: '#e74c3c', 2: '#e67e22', 3: '#f1c40f',
       4: '#2ecc71', 5: '#3498db', 6: '#34495e',
       7: '#9b59b6', 8: '#fd79a8', 9: '#7f8c8d'
     };
 
+    // 현재 조 번호 및 색상 불러오기
     const myTeam = localStorage.getItem('selectedTeam');
     const teamColor = teamColors[myTeam];
 
+    // 최대 선택 가능 수
     const maxSelections = 4;
     let selectionCount = 0;
 
+    // 선택 수 업데이트 함수
     const updateStatus = () => {
       document.getElementById('count').innerText = selectionCount;
     };
 
+    // 로컬 스토리지에서 선택 정보 로딩
     const loadSelectionData = () => {
       const data = localStorage.getItem('selections');
       return data ? JSON.parse(data) : {};
     };
 
+    // 로컬 스토리지에 선택 정보 저장
     const saveSelectionData = (data) => {
       localStorage.setItem('selections', JSON.stringify(data));
     };
 
+    // 전체 현황 요약 업데이트
     const updateSummary = (selections) => {
       const content = document.getElementById('summary-content');
       content.innerHTML = '';
@@ -163,10 +175,12 @@
       }
     };
 
+    // 페이지 로딩 시 실행
     window.onload = () => {
       const grid = document.querySelector('.game-grid');
       const savedData = loadSelectionData();
 
+      // 6개의 게임 카드 생성
       for (let i = 1; i <= 6; i++) {
         const card = document.createElement('div');
         card.className = 'game-card';
@@ -184,6 +198,7 @@
 
         const slots = card.querySelectorAll('.slot');
 
+        // 저장된 데이터가 있다면 반영
         if (savedData[i]) {
           savedData[i].forEach((team, index) => {
             if (team && teamColors[team]) {
@@ -195,18 +210,22 @@
           });
         }
 
+        // 슬롯 클릭 이벤트 처리
         slots.forEach((slot, idx) => {
           slot.addEventListener('click', () => {
             const alreadySelectedByTeam = Array.from(slots).some(s => s.dataset.team === myTeam);
             const selections = loadSelectionData();
             selections[i] = selections[i] || [null, null, null, null];
 
+            // 본인 조가 이미 선택했던 슬롯이면 취소
             if (slot.dataset.team === myTeam) {
               slot.style.backgroundColor = '#fff';
               slot.innerText = '';
               delete slot.dataset.team;
               selections[i][idx] = null;
               selectionCount--;
+
+            // 선택되지 않은 슬롯 클릭 시 등록
             } else if (!slot.dataset.team && !alreadySelectedByTeam) {
               if (selectionCount >= maxSelections) {
                 alert('최대 선택 가능 수를 초과했습니다.');
@@ -218,6 +237,7 @@
               selections[i][idx] = myTeam;
               selectionCount++;
             }
+
             saveSelectionData(selections);
             updateStatus();
             updateSummary(selections);
