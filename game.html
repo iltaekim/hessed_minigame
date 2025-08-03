@@ -4,13 +4,119 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>게임 선택</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getDatabase, ref, set, get, onValue, update } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCdCPcboDLiOHz_-JZdEockQqxy3-ROMK8",
+      authDomain: "hessed-minigame.firebaseapp.com",
+      databaseURL: "https://hessed-minigame-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "hessed-minigame",
+      storageBucket: "hessed-minigame.firebasestorage.app",
+      messagingSenderId: "1080476713749",
+      appId: "1:1080476713749:web:4dd2f4482aec89a5931f1c"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const gameGrid = document.querySelector(".game-grid");
+    const countEl = document.getElementById("count");
+    const summaryContent = document.getElementById("summary-content");
+
+    const myTeamId = prompt("당신의 조 번호를 입력하세요 (예: 1)");
+    const teamColor = `hsl(${parseInt(myTeamId) * 40}, 70%, 50%)`;
+    const totalGames = 8;
+    const slotsPerGame = 4;
+    let selectedGames = new Set();
+
+    function updateCount() {
+      countEl.textContent = selectedGames.size;
+    }
+
+    function renderSummary(data) {
+      const summary = [];
+      for (let game = 1; game <= totalGames; game++) {
+        const gameData = data[game] || {};
+        const teams = Object.values(gameData).filter(Boolean).join(", ") || "없음";
+        summary.push(`<strong>게임 ${game}</strong>: ${teams}`);
+      }
+      summaryContent.innerHTML = summary.join("<br>");
+    }
+
+    function syncRealtime() {
+      onValue(ref(db, "games"), (snapshot) => {
+        const data = snapshot.val() || {};
+        renderSummary(data);
+        document.querySelectorAll(".slot").forEach((el) => {
+          const gameId = el.dataset.game;
+          const slotId = el.dataset.slot;
+          const team = (data[gameId] && data[gameId][slotId]) || "";
+          el.textContent = team;
+          el.style.background = team ? `hsl(${parseInt(team) * 40}, 70%, 50%)` : "#fff";
+        });
+      });
+    }
+
+    function createCard(gameId) {
+      const card = document.createElement("div");
+      card.className = "game-card";
+
+      const title = document.createElement("div");
+      title.className = "game-title";
+      title.textContent = `게임 ${gameId}`;
+
+      const image = document.createElement("div");
+      image.className = "game-image";
+      image.textContent = `이미지${gameId}`;
+
+      const slots = document.createElement("div");
+      slots.className = "slots";
+
+      for (let i = 1; i <= slotsPerGame; i++) {
+        const slot = document.createElement("div");
+        slot.className = "slot";
+        slot.dataset.game = gameId;
+        slot.dataset.slot = i;
+
+        slot.addEventListener("click", async () => {
+          const snap = await get(ref(db, `games/${gameId}/${i}`));
+          const current = snap.val();
+
+          if (current === myTeamId) {
+            await set(ref(db, `games/${gameId}/${i}`), null);
+            selectedGames.delete(gameId);
+          } else if (!current && selectedGames.size < 4) {
+            await set(ref(db, `games/${gameId}/${i}`), myTeamId);
+            selectedGames.add(gameId);
+          }
+
+          updateCount();
+        });
+
+        slots.appendChild(slot);
+      }
+
+      card.appendChild(title);
+      card.appendChild(image);
+      card.appendChild(slots);
+      gameGrid.appendChild(card);
+    }
+
+    for (let i = 1; i <= totalGames; i++) {
+      createCard(i);
+    }
+
+    updateCount();
+    syncRealtime();
+  </script>
   <style>
     body {
       font-family: 'Arial', sans-serif;
       margin: 0;
       background-color: #f9f9f9;
       padding: 20px;
-      font-size: 18px; /* 전체 기본 폰트 크기 확대 */
+      font-size: 18px;
     }
 
     h1 {
@@ -28,7 +134,7 @@
     .game-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 40px; /* 카드 간격 확대 */
+      gap: 40px;
       max-width: 1400px;
       margin: 0 auto;
     }
@@ -53,7 +159,7 @@
 
     .game-image {
       width: 100%;
-      height: 320px; /* 이미지 영역 확대 */
+      height: 320px;
       background: lightgray;
       display: flex;
       align-items: center;
@@ -130,126 +236,5 @@
     <h2>전체 선택 현황</h2>
     <div id="summary-content"></div>
   </div>
-
-  <script>
-    // 조 색상 설정
-    const teamColors = {
-      1: '#e74c3c', 2: '#e67e22', 3: '#f1c40f',
-      4: '#2ecc71', 5: '#3498db', 6: '#34495e',
-      7: '#9b59b6', 8: '#fd79a8', 9: '#7f8c8d'
-    };
-
-    // 현재 조 번호 및 색상 불러오기
-    const myTeam = localStorage.getItem('selectedTeam');
-    const teamColor = teamColors[myTeam];
-
-    // 최대 선택 가능 수
-    const maxSelections = 4;
-    let selectionCount = 0;
-
-    // 선택 수 업데이트 함수
-    const updateStatus = () => {
-      document.getElementById('count').innerText = selectionCount;
-    };
-
-    // 로컬 스토리지에서 선택 정보 로딩
-    const loadSelectionData = () => {
-      const data = localStorage.getItem('selections');
-      return data ? JSON.parse(data) : {};
-    };
-
-    // 로컬 스토리지에 선택 정보 저장
-    const saveSelectionData = (data) => {
-      localStorage.setItem('selections', JSON.stringify(data));
-    };
-
-    // 전체 현황 요약 업데이트
-    const updateSummary = (selections) => {
-      const content = document.getElementById('summary-content');
-      content.innerHTML = '';
-      for (let game in selections) {
-        const line = document.createElement('div');
-        const teams = selections[game].filter(Boolean).map(t => `${t}조`).join(', ');
-        line.innerText = `게임 ${game}: ${teams || '선택 없음'}`;
-        content.appendChild(line);
-      }
-    };
-
-    // 페이지 로딩 시 실행
-    window.onload = () => {
-      const grid = document.querySelector('.game-grid');
-      const savedData = loadSelectionData();
-
-      // 6개의 게임 카드 생성
-      for (let i = 1; i <= 6; i++) {
-        const card = document.createElement('div');
-        card.className = 'game-card';
-
-        card.innerHTML = `
-          <div class="game-title">게임 ${i}</div>
-          <div class="game-image">
-            이미지${i}
-            <div class="overlay">게임 설명 ${i}</div>
-          </div>
-          <div class="slots">
-            ${Array(4).fill('').map(() => '<div class="slot"></div>').join('')}
-          </div>
-        `;
-
-        const slots = card.querySelectorAll('.slot');
-
-        // 저장된 데이터가 있다면 반영
-        if (savedData[i]) {
-          savedData[i].forEach((team, index) => {
-            if (team && teamColors[team]) {
-              slots[index].style.backgroundColor = teamColors[team];
-              slots[index].dataset.team = team;
-              slots[index].innerText = team;
-              if (team === myTeam) selectionCount++;
-            }
-          });
-        }
-
-        // 슬롯 클릭 이벤트 처리
-        slots.forEach((slot, idx) => {
-          slot.addEventListener('click', () => {
-            const alreadySelectedByTeam = Array.from(slots).some(s => s.dataset.team === myTeam);
-            const selections = loadSelectionData();
-            selections[i] = selections[i] || [null, null, null, null];
-
-            // 본인 조가 이미 선택했던 슬롯이면 취소
-            if (slot.dataset.team === myTeam) {
-              slot.style.backgroundColor = '#fff';
-              slot.innerText = '';
-              delete slot.dataset.team;
-              selections[i][idx] = null;
-              selectionCount--;
-
-            // 선택되지 않은 슬롯 클릭 시 등록
-            } else if (!slot.dataset.team && !alreadySelectedByTeam) {
-              if (selectionCount >= maxSelections) {
-                alert('최대 선택 가능 수를 초과했습니다.');
-                return;
-              }
-              slot.style.backgroundColor = teamColor;
-              slot.dataset.team = myTeam;
-              slot.innerText = myTeam;
-              selections[i][idx] = myTeam;
-              selectionCount++;
-            }
-
-            saveSelectionData(selections);
-            updateStatus();
-            updateSummary(selections);
-          });
-        });
-
-        grid.appendChild(card);
-      }
-
-      updateStatus();
-      updateSummary(savedData);
-    };
-  </script>
 </body>
 </html>
