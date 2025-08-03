@@ -93,8 +93,6 @@
 <body>
   <h1>게임을 선택하세요</h1>
   <div class="game-grid">
-    <!-- 6개의 게임 카드 반복 -->
-    <!-- 아래는 반복되는 예시로 각 카드에는 게임 번호를 붙임 -->
     <script>
       const teamColors = {
         1: '#e74c3c', 2: '#e67e22', 3: '#f1c40f',
@@ -102,9 +100,11 @@
         7: '#9b59b6', 8: '#fd79a8', 9: '#7f8c8d'
       };
       const myTeam = localStorage.getItem('selectedTeam');
+      const teamColor = teamColors[myTeam];
 
       window.onload = () => {
         const grid = document.querySelector('.game-grid');
+
         for (let i = 1; i <= 6; i++) {
           const card = document.createElement('div');
           card.className = 'game-card';
@@ -119,26 +119,29 @@
             </div>
           `;
 
-          card.querySelectorAll('.slot').forEach(slot => {
+          const slots = card.querySelectorAll('.slot');
+
+          slots.forEach(slot => {
             slot.addEventListener('click', () => {
-              const currentColor = slot.style.backgroundColor;
-              const teamColor = teamColors[myTeam];
-              if (currentColor === '' || currentColor === 'rgb(255, 255, 255)') {
-                // 빈 슬롯이면 선택
-                slot.style.backgroundColor = teamColor;
-              } else if (slot.style.backgroundColor === teamColor) {
-                // 내가 선택한 슬롯이면 취소 가능
+              const alreadySelectedByTeam = Array.from(slots).some(s => s.dataset.team === myTeam);
+
+              // 취소 조건: 내가 선택한 슬롯 다시 누름
+              if (slot.dataset.team === myTeam) {
                 slot.style.backgroundColor = '#fff';
-              } else {
-                // 다른 조의 슬롯은 무시
-                return;
+                delete slot.dataset.team;
               }
+              // 선택 조건: 빈 슬롯이고 아직 해당 게임에 내가 참여하지 않았을 경우
+              else if (!slot.dataset.team && !alreadySelectedByTeam) {
+                slot.style.backgroundColor = teamColor;
+                slot.dataset.team = myTeam;
+              }
+              // 그 외엔 무시 (다른 조가 선택했거나, 이미 한 슬롯 있음)
             });
           });
 
           grid.appendChild(card);
         }
-      }
+      };
     </script>
   </div>
 </body>
