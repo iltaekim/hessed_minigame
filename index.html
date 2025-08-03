@@ -15,28 +15,42 @@
       margin: 10px;
       padding: 20px 40px;
       font-size: 1.5em;
-      background-color: #4CAF50;
       color: white;
       border: none;
       border-radius: 10px;
       cursor: pointer;
     }
     .team-btn:hover {
-      background-color: #45a049;
+      opacity: 0.9;
     }
+    .team-1 { background-color: #e74c3c; }  /* 빨강 */
+    .team-2 { background-color: #e67e22; }  /* 주황 */
+    .team-3 { background-color: #f1c40f; color: #000; }  /* 노랑 */
+    .team-4 { background-color: #2ecc71; }  /* 초록 */
+    .team-5 { background-color: #3498db; }  /* 파랑 */
+    .team-6 { background-color: #34495e; }  /* 남색 */
+    .team-7 { background-color: #9b59b6; }  /* 보라 */
+    .team-8 { background-color: #fd79a8; }  /* 핑크 */
+    .team-9 { background-color: #7f8c8d; }  /* 회색 */
   </style>
 </head>
 <body>
   <h1>당신의 조를 선택하세요</h1>
   <div>
-    <button class="team-btn" onclick="goToGame(1)">1조</button>
-    <button class="team-btn" onclick="goToGame(2)">2조</button>
-    <button class="team-btn" onclick="goToGame(3)">3조</button>
-    <button class="team-btn" onclick="goToGame(4)">4조</button>
+    <button class="team-btn team-1" onclick="goToGame(1)">1조</button>
+    <button class="team-btn team-2" onclick="goToGame(2)">2조</button>
+    <button class="team-btn team-3" onclick="goToGame(3)">3조</button>
+    <button class="team-btn team-4" onclick="goToGame(4)">4조</button>
+    <button class="team-btn team-5" onclick="goToGame(5)">5조</button>
+    <button class="team-btn team-6" onclick="goToGame(6)">6조</button>
+    <button class="team-btn team-7" onclick="goToGame(7)">7조</button>
+    <button class="team-btn team-8" onclick="goToGame(8)">8조</button>
+    <button class="team-btn team-9" onclick="goToGame(9)">9조</button>
   </div>
 
   <script>
     function goToGame(teamId) {
+      localStorage.setItem('selectedTeam', teamId);
       window.location.href = `game.html?team=${teamId}`;
     }
   </script>
