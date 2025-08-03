@@ -243,7 +243,7 @@
     db.ref('selections').on('value', snapshot => {
       const data = snapshot.val() || {};
       for (let i = 1; i <= 6; i++) {
-        selections[i] = Array.isArray(data[i]) ? [...data[i], null, null, null, null].slice(0, 4) : [null, null, null, null];
+        selections[i] = Array.from({ length: 4 }, (_, idx) => data[i]?.[idx] ?? null);
       }
       selectionCount = 0;
       createGameCards();
