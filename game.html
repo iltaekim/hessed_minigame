@@ -152,6 +152,15 @@
       7: '#9b59b6', 8: '#fd79a8', 9: '#7f8c8d'
     };
 
+    const slotConfig = {
+      1: 4,
+      2: 4,
+      3: 4,
+      4: 4,
+      5: 4,
+      6: 4
+    };
+
     const myTeam = localStorage.getItem('selectedTeam');
     const teamColor = teamColors[myTeam];
     const maxSelections = 4;
@@ -195,12 +204,12 @@
             <div class="overlay">게임 설명 ${i}</div>
           </div>
           <div class="slots">
-            ${Array(4).fill('').map((_, idx) => `<div class="slot" data-game="${i}" data-slot="${idx}"></div>`).join('')}
+            ${Array(slotConfig[i]).fill('').map((_, idx) => `<div class="slot" data-game="${i}" data-slot="${idx}"></div>`).join('')}
           </div>
         `;
 
         const slots = card.querySelectorAll('.slot');
-        selections[i] = selections[i] || [null, null, null, null];
+        selections[i] = selections[i] || Array(slotConfig[i]).fill(null);
 
         slots.forEach((slot, idx) => {
           const team = selections[i][idx]?.team;
@@ -243,7 +252,7 @@
     db.ref('selections').on('value', snapshot => {
       const data = snapshot.val() || {};
       for (let i = 1; i <= 6; i++) {
-        selections[i] = Array.from({ length: 4 }, (_, idx) => data[i]?.[idx] ?? null);
+        selections[i] = Array.from({ length: slotConfig[i] }, (_, idx) => data[i]?.[idx] ?? null);
       }
       selectionCount = 0;
       createGameCards();
