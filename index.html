@@ -49,8 +49,22 @@
   </div>
 
   <script>
+    const teamColors = {
+      1: '#e74c3c',
+      2: '#e67e22',
+      3: '#f1c40f',
+      4: '#2ecc71',
+      5: '#3498db',
+      6: '#34495e',
+      7: '#9b59b6',
+      8: '#fd79a8',
+      9: '#7f8c8d'
+    };
+
     function goToGame(teamId) {
       localStorage.setItem('selectedTeam', teamId);
+      localStorage.setItem('selectedColor', teamColors[teamId]);
+      console.log(`팀 ${teamId} 선택됨, 색상: ${teamColors[teamId]}`);
       window.location.href = `game.html?team=${teamId}`;
     }
   </script>
