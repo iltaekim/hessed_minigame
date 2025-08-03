@@ -159,15 +159,43 @@
   </div>
 
   <script>
-    // ... 기존 JavaScript 코드 유지 ...
+    const gameCount = 6;
+    const slotsPerGame = 4;
+    const gameGrid = document.querySelector('.game-grid');
+
+    for (let i = 0; i < gameCount; i++) {
+      const card = document.createElement('div');
+      card.className = 'game-card';
+
+      const title = document.createElement('div');
+      title.className = 'game-title';
+      title.textContent = `게임 ${i + 1}`;
+
+      const image = document.createElement('div');
+      image.className = 'game-image';
+      image.textContent = `이미지${i + 1}`;
+
+      const slots = document.createElement('div');
+      slots.className = 'slots';
+
+      for (let j = 0; j < slotsPerGame; j++) {
+        const slot = document.createElement('div');
+        slot.className = 'slot';
+        slot.dataset.game = i;
+        slot.dataset.index = j;
+        slots.appendChild(slot);
+      }
+
+      card.appendChild(title);
+      card.appendChild(image);
+      card.appendChild(slots);
+      gameGrid.appendChild(card);
+    }
 
     const applySlotAnimation = (slot) => {
       slot.classList.add('animate-fill');
       setTimeout(() => slot.classList.remove('animate-fill'), 300);
     };
-
-    // 이 함수는 슬롯 선택 시 호출되도록 연결됨
-    // 예시: applySlotAnimation(slot);
   </script>
 </body>
 </html>
