@@ -40,9 +40,9 @@
       margin-top: 10px;
     }
   </style>
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"></script>
+  <!-- ✅ Firebase SDK (compat version) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
   <h1>게임을 선택하세요</h1>
@@ -60,7 +60,7 @@
       messagingSenderId: "1080476713749",
       appId: "1:1080476713749:web:4dd2f4482aec89a5931f1c"
     };
-    const app = firebase.initializeApp(firebaseConfig);
+    firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
     const selectedTeam = localStorage.getItem('selectedTeam');
