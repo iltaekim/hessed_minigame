@@ -4,244 +4,136 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>게임 선택</title>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { getDatabase, ref, set, get, onValue, update } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyCdCPcboDLiOHz_-JZdEockQqxy3-ROMK8",
-      authDomain: "hessed-minigame.firebaseapp.com",
-      databaseURL: "https://hessed-minigame-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "hessed-minigame",
-      storageBucket: "hessed-minigame.firebasestorage.app",
-      messagingSenderId: "1080476713749",
-      appId: "1:1080476713749:web:4dd2f4482aec89a5931f1c"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const gameGrid = document.querySelector(".game-grid");
-    const countEl = document.getElementById("count");
-    const summaryContent = document.getElementById("summary-content");
-
-    // URL에서 팀 번호 파라미터 추출
-    const urlParams = new URLSearchParams(window.location.search);
-    const myTeamId = urlParams.get("team");
-    if (!myTeamId) {
-      alert("팀 번호가 전달되지 않았습니다. 처음 화면으로 돌아가세요.");
-      throw new Error("No team ID in URL");
-    }
-
-    const teamColor = `hsl(${parseInt(myTeamId) * 40}, 70%, 50%)`;
-    const totalGames = 8;
-    const slotsPerGame = 4;
-    let selectedGames = new Set();
-
-    function updateCount() {
-      countEl.textContent = selectedGames.size;
-    }
-
-    function renderSummary(data) {
-      const summary = [];
-      for (let game = 1; game <= totalGames; game++) {
-        const gameData = data[game] || {};
-        const teams = Object.values(gameData).filter(Boolean).join(", ") || "없음";
-        summary.push(`<strong>게임 ${game}</strong>: ${teams}`);
-      }
-      summaryContent.innerHTML = summary.join("<br>");
-    }
-
-    function syncRealtime() {
-      onValue(ref(db, "games"), (snapshot) => {
-        const data = snapshot.val() || {};
-        renderSummary(data);
-        document.querySelectorAll(".slot").forEach((el) => {
-          const gameId = el.dataset.game;
-          const slotId = el.dataset.slot;
-          const team = (data[gameId] && data[gameId][slotId]) || "";
-          el.textContent = team;
-          el.style.background = team ? `hsl(${parseInt(team) * 40}, 70%, 50%)` : "#fff";
-        });
-      });
-    }
-
-    function createCard(gameId) {
-      const card = document.createElement("div");
-      card.className = "game-card";
-
-      const title = document.createElement("div");
-      title.className = "game-title";
-      title.textContent = `게임 ${gameId}`;
-
-      const image = document.createElement("div");
-      image.className = "game-image";
-      image.textContent = `이미지${gameId}`;
-
-      const slots = document.createElement("div");
-      slots.className = "slots";
-
-      for (let i = 1; i <= slotsPerGame; i++) {
-        const slot = document.createElement("div");
-        slot.className = "slot";
-        slot.dataset.game = gameId;
-        slot.dataset.slot = i;
-
-        slot.addEventListener("click", async () => {
-          const snap = await get(ref(db, `games/${gameId}/${i}`));
-          const current = snap.val();
-
-          if (current === myTeamId) {
-            await set(ref(db, `games/${gameId}/${i}`), null);
-            selectedGames.delete(gameId);
-          } else if (!current && selectedGames.size < 4) {
-            await set(ref(db, `games/${gameId}/${i}`), myTeamId);
-            selectedGames.add(gameId);
-          }
-
-          updateCount();
-        });
-
-        slots.appendChild(slot);
-      }
-
-      card.appendChild(title);
-      card.appendChild(image);
-      card.appendChild(slots);
-      gameGrid.appendChild(card);
-    }
-
-    for (let i = 1; i <= totalGames; i++) {
-      createCard(i);
-    }
-
-    updateCount();
-    syncRealtime();
-  </script>
   <style>
     body {
-      font-family: 'Arial', sans-serif;
-      margin: 0;
-      background-color: #f9f9f9;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 100px;
+      font-size: 24px;
+    }
+    .game-box {
+      display: inline-block;
+      margin: 20px;
       padding: 20px;
-      font-size: 18px;
-    }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 10px;
-      font-size: 2.2em;
-    }
-
-    #status {
-      text-align: center;
-      font-size: 1.4em;
-      margin-bottom: 20px;
-    }
-
-    .game-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 40px;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-
-    .game-card {
-      background: #fff;
-      border: 2px solid #ddd;
+      border: 2px solid #ccc;
       border-radius: 10px;
-      overflow: hidden;
-      position: relative;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-
-    .game-title {
-      background: #333;
-      color: white;
-      padding: 18px;
-      text-align: center;
-      font-size: 1.8em;
-      font-weight: bold;
-    }
-
-    .game-image {
-      width: 100%;
-      height: 320px;
-      background: lightgray;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       cursor: pointer;
-      position: relative;
-      font-size: 1.6em;
     }
-
-    .game-image:hover .overlay {
-      display: flex;
-    }
-
-    .overlay {
-      display: none;
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: rgba(0, 0, 0, 0.6);
-      color: white;
-      justify-content: center;
-      align-items: center;
-      padding: 10px;
-      text-align: center;
-      font-size: 1.4em;
-    }
-
-    .slots {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      padding: 20px;
-    }
-
     .slot {
-      width: 46px;
-      height: 46px;
-      border-radius: 4px;
-      background: #fff;
-      border: 1px solid #ccc;
-      cursor: pointer;
-      position: relative;
-      color: white;
-      font-size: 18px;
-      text-align: center;
-      line-height: 46px;
+      width: 60px;
+      height: 60px;
+      margin: 10px auto;
+      border-radius: 8px;
+      background-color: white;
+      border: 2px solid #aaa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       font-weight: bold;
     }
-
-    #summary {
-      margin-top: 40px;
-      padding: 16px;
-      background: #fff;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      max-width: 800px;
-      margin-left: auto;
-      margin-right: auto;
-      font-size: 1.2em;
+    .slot.filled {
+      color: white;
     }
-
-    #summary h2 {
-      text-align: center;
+    .warning {
+      color: red;
+      font-size: 18px;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
   <h1>게임을 선택하세요</h1>
-  <div id="status">선택한 게임 수: <span id="count">0</span> / 4</div>
-  <div class="game-grid"></div>
-  <div id="summary">
-    <h2>전체 선택 현황</h2>
-    <div id="summary-content"></div>
-  </div>
+  <div id="games-container"></div>
+  <div id="warning" class="warning"></div>
+
+  <script>
+    const selectedTeam = localStorage.getItem('selectedTeam');
+    const selectedColor = localStorage.getItem('selectedColor');
+
+    const MAX_SELECTION_PER_TEAM = 4;
+    const TOTAL_GAMES = 6;
+    const SLOTS_PER_GAME = 3;
+
+    const selections = {}; // gameId -> list of team numbers
+    const teamSelectionCount = {}; // team number -> count
+
+    for (let i = 1; i <= TOTAL_GAMES; i++) {
+      selections[i] = [];
+    }
+
+    const container = document.getElementById('games-container');
+
+    for (let gameId = 1; gameId <= TOTAL_GAMES; gameId++) {
+      const gameBox = document.createElement('div');
+      gameBox.className = 'game-box';
+      gameBox.innerHTML = `<h2>게임 ${gameId}</h2>`;
+
+      for (let slotIndex = 0; slotIndex < SLOTS_PER_GAME; slotIndex++) {
+        const slot = document.createElement('div');
+        slot.className = 'slot';
+        slot.dataset.gameId = gameId;
+        slot.dataset.index = slotIndex;
+
+        slot.addEventListener('click', () => handleSlotClick(slot));
+
+        gameBox.appendChild(slot);
+      }
+
+      container.appendChild(gameBox);
+    }
+
+    function handleSlotClick(slot) {
+      const gameId = parseInt(slot.dataset.gameId);
+      const currentTeam = parseInt(selectedTeam);
+
+      const teamAlreadyInGame = selections[gameId].includes(currentTeam);
+      const isFilled = slot.classList.contains('filled');
+
+      // 클릭 취소
+      if (isFilled && slot.dataset.team == selectedTeam) {
+        slot.classList.remove('filled');
+        slot.style.backgroundColor = 'white';
+        slot.innerText = '';
+        slot.dataset.team = '';
+
+        selections[gameId] = selections[gameId].filter(t => t != currentTeam);
+        teamSelectionCount[currentTeam] = (teamSelectionCount[currentTeam] || 1) - 1;
+        return;
+      }
+
+      // 중복 팀 방지
+      if (teamAlreadyInGame) {
+        showWarning('이미 이 게임을 선택했습니다.');
+        return;
+      }
+
+      // 최대 선택 수 초과 방지
+      if ((teamSelectionCount[currentTeam] || 0) >= MAX_SELECTION_PER_TEAM) {
+        showWarning('최대 선택 가능 수를 초과했습니다.');
+        return;
+      }
+
+      // 빈 슬롯인지 확인
+      if (isFilled) return;
+
+      // 선택 처리
+      slot.classList.add('filled');
+      slot.style.backgroundColor = selectedColor;
+      slot.innerText = `${currentTeam}조`;
+      slot.dataset.team = currentTeam;
+
+      selections[gameId].push(currentTeam);
+      teamSelectionCount[currentTeam] = (teamSelectionCount[currentTeam] || 0) + 1;
+      clearWarning();
+    }
+
+    function showWarning(msg) {
+      document.getElementById('warning').innerText = msg;
+    }
+
+    function clearWarning() {
+      document.getElementById('warning').innerText = '';
+    }
+  </script>
 </body>
 </html>
