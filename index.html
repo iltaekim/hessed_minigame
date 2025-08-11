@@ -5,73 +5,125 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>조 선택 화면</title>
   <style>
+    :root { --gap: 20px; }
+    * { box-sizing: border-box; }
     body {
       font-family: 'Arial', sans-serif;
       background-color: #f5f5f5;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 100vh; margin: 0; padding: 24px;
     }
-
-    h1 {
-      margin-bottom: 30px;
-    }
-
+    h1 { margin: 0 0 16px; }
+    .desc { color:#555; margin-bottom: 24px; }
     .team-grid {
       display: grid;
-      grid-template-columns: repeat(3, 120px);
-      gap: 20px;
+      grid-template-columns: repeat(3, minmax(96px, 120px));
+      gap: var(--gap);
+      justify-content: center;
+      margin-bottom: 24px;
+      width: 100%;
+      max-width: 420px;
     }
-
     .team-button {
-      width: 120px;
-      height: 120px;
-      border: none;
-      border-radius: 12px;
-      color: white;
-      font-size: 1.2em;
-      cursor: pointer;
-      font-weight: bold;
-      transition: transform 0.2s;
+      width: 100%; aspect-ratio: 1/1;
+      border: none; border-radius: 14px; color: white; font-size: 1.1em;
+      cursor: pointer; font-weight: 800; transition: transform .12s, box-shadow .12s, outline-color .12s;
+      box-shadow: 0 4px 10px rgba(0,0,0,.08);
+      outline: 3px solid transparent;
     }
-
-    .team-button:hover {
-      transform: scale(1.05);
+    .team-button:hover { transform: translateY(-2px); }
+    .team-button.active { outline-color: #111; }
+    .bar {
+      display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
     }
+    .primary, .ghost {
+      padding: 12px 16px; border-radius: 10px; cursor: pointer; font-weight: 700; border: 0;
+      box-shadow: 0 4px 10px rgba(0,0,0,.08);
+    }
+    .primary { background: #111; color: #fff; }
+    .primary:disabled { opacity: .5; cursor: not-allowed; }
+    .ghost { background: #fff; color:#111; }
+    .hint { margin-top: 12px; color:#666; font-size: .95em; }
+    .footer { margin-top: 18px; color:#888; font-size: .9em; }
 
-    .team-1 { background-color: #e74c3c; }  /* 빨강 */
-    .team-2 { background-color: #e67e22; }  /* 주황 */
-    .team-3 { background-color: #f1c40f; color: #000; }  /* 노랑 */
-    .team-4 { background-color: #2ecc71; }  /* 초록 */
-    .team-5 { background-color: #3498db; }  /* 파랑 */
-    .team-6 { background-color: #34495e; }  /* 남색 */
-    .team-7 { background-color: #9b59b6; }  /* 보라 */
-    .team-8 { background-color: #fd79a8; }  /* 핑크 */
-    .team-9 { background-color: #7f8c8d; }  /* 회색 */
+    .team-1 { background-color: #e74c3c; }
+    .team-2 { background-color: #e67e22; }
+    .team-3 { background-color: #f1c40f; color: #000; }
+    .team-4 { background-color: #2ecc71; }
+    .team-5 { background-color: #3498db; }
+    .team-6 { background-color: #34495e; }
+    .team-7 { background-color: #9b59b6; }
+    .team-8 { background-color: #fd79a8; }
+    .team-9 { background-color: #7f8c8d; }
+
+    @media (max-width: 420px) {
+      :root { --gap: 14px; }
+    }
   </style>
 </head>
 <body>
   <h1>자신의 조를 선택하세요</h1>
-  <div class="team-grid">
-    <button class="team-button team-1" onclick="selectTeam(1)">1조</button>
-    <button class="team-button team-2" onclick="selectTeam(2)">2조</button>
-    <button class="team-button team-3" onclick="selectTeam(3)">3조</button>
-    <button class="team-button team-4" onclick="selectTeam(4)">4조</button>
-    <button class="team-button team-5" onclick="selectTeam(5)">5조</button>
-    <button class="team-button team-6" onclick="selectTeam(6)">6조</button>
-    <button class="team-button team-7" onclick="selectTeam(7)">7조</button>
-    <button class="team-button team-8" onclick="selectTeam(8)">8조</button>
-    <button class="team-button team-9" onclick="selectTeam(9)">9조</button>
+  <div class="desc">선택 후 “선택 완료”를 눌러 게임 화면으로 이동합니다.</div>
+
+  <div class="team-grid" id="grid">
+    <button class="team-button team-1" data-team="1">1조</button>
+    <button class="team-button team-2" data-team="2">2조</button>
+    <button class="team-button team-3" data-team="3">3조</button>
+    <button class="team-button team-4" data-team="4">4조</button>
+    <button class="team-button team-5" data-team="5">5조</button>
+    <button class="team-button team-6" data-team="6">6조</button>
+    <button class="team-button team-7" data-team="7">7조</button>
+    <button class="team-button team-8" data-team="8">8조</button>
+    <button class="team-button team-9" data-team="9">9조</button>
   </div>
 
+  <div class="bar">
+    <button id="go" class="primary" disabled>선택 완료</button>
+    <button id="reset" class="ghost">선택 초기화</button>
+  </div>
+
+  <div class="hint" id="hint"></div>
+  <div class="footer">※ 브라우저 로컬 저장소에 조 정보가 저장됩니다.</div>
+
   <script>
-    function selectTeam(teamNumber) {
-      localStorage.setItem('selectedTeam', teamNumber);
-      window.location.href = 'game.html'; // 게임 선택 화면으로 이동
+    const grid = document.getElementById('grid');
+    const goBtn = document.getElementById('go');
+    const resetBtn = document.getElementById('reset');
+    const hint = document.getElementById('hint');
+
+    // 기존 선택 복원
+    const saved = localStorage.getItem('selectedTeam');
+    if (saved) {
+      const btn = grid.querySelector(`.team-button[data-team="${saved}"]`);
+      if (btn) {
+        btn.classList.add('active');
+        goBtn.disabled = false;
+        hint.textContent = `${saved}조가 선택되었습니다.`;
+      }
     }
+
+    grid.addEventListener('click', (e) => {
+      const btn = e.target.closest('.team-button');
+      if (!btn) return;
+      grid.querySelectorAll('.team-button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const team = btn.dataset.team;
+      localStorage.setItem('selectedTeam', team);
+      goBtn.disabled = false;
+      hint.textContent = `${team}조가 선택되었습니다.`;
+    });
+
+    goBtn.addEventListener('click', () => {
+      if (!localStorage.getItem('selectedTeam')) return;
+      window.location.href = 'game.html';
+    });
+
+    resetBtn.addEventListener('click', () => {
+      localStorage.removeItem('selectedTeam');
+      grid.querySelectorAll('.team-button').forEach(b => b.classList.remove('active'));
+      goBtn.disabled = true;
+      hint.textContent = '선택이 초기화되었습니다.';
+    });
   </script>
 </body>
 </html>
