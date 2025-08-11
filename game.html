@@ -120,8 +120,16 @@
       alert('먼저 조를 선택해주세요.');
       location.href = 'index.html';
     }
-
-    // 2) Firebase
+    // 2) 게임별 설명 데이터
+    const gameDescriptions = {
+      1: "🤿 릴레이 잠수 대결\n팀원들이 차례대로 입수! 숨을 참으며 버티고 다음 주자에게 바통을 넘기세요! 마지막까지 물속을 지배하는 조가 궁극의 잠수왕에 등극합니다.",
+      2: "👀 단체 눈치 게임\n여러 조가 단체로 눈치게임을 시작! 심장이 쿵쿵~ 긴장되는 순간! 타이밍을 잘못 잡으면 바로 탈락~ 최후의 3인은 과연 누구? 그 사람들이 속한 조가 승리를 거머쥡니다!",
+      3: "🎈 풍선 서바이벌\n손에 손잡고 풍선 튕기기! 풍선을 떨어뜨리면 즉시 탈락~ 라운드가 진행될수록 풍선 개수는 점점 증가합니다. 과연 어떤 조가 끝까지 살아남을지~?",
+      4: "❓ 히든 챌린지\n비밀에 싸인 미스터리 게임! 비밀의 게임이 진행됩니다! 과연 어떤 게임이 펼쳐질까요? 정말 재밌을지도?",
+      5: "🥶 바가지 참참참\n참참참에서 이기면 바가지 물싸다구! 지면 방어 가능~ 상대방 얼굴의 포스트잇을 떨어뜨리면 짜릿한 승리! 웃음과 물벼락이 동시에 터집니다.",
+      6: "🏐 계곡 비치발리볼\n물놀이에서 빠질 수 없는 비치발리볼~ 이번엔 계곡에서 즐겨볼까요?!"
+    };
+    // 3) Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyCdCPcboDLiOHz_-JZdEockQqxy3-ROMK8",
       authDomain: "hessed-minigame.firebaseapp.com",
@@ -134,7 +142,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 3) 팀 색상
+    // 4) 팀 색상
     const teamColors = {
       1: '#e74c3c', 2: '#e67e22', 3: '#f1c40f',
       4: '#2ecc71', 5: '#3498db', 6: '#34495e',
@@ -142,13 +150,13 @@
     };
     const teamColor = teamColors[myTeam] || '#000';
 
-    // 4) 상태
+    // 5) 상태
     let maxSelections = 4;                 // 기본값(실시간 config로 대체됨)
     let slotConfig = { 1:4, 2:4, 3:4, 4:4, 5:4, 6:4 }; // 기본값(실시간 config로 대체됨)
     let selections = {}; // selections[gameId] = [ {team,color} | null, ... ]
     let selectionCount = 0;
 
-    // 5) UI 엘리먼트
+    // 6) UI 엘리먼트
     const grid = document.getElementById('grid');
     const statusCount = document.getElementById('count');
     const statusMax = document.getElementById('max');
@@ -281,7 +289,7 @@
         </div>
         <div class="game-image">
           <img src="images/game-${gameId}.png" alt="게임 ${gameId}" style="width:100%; height:100%; object-fit:cover;">
-          <div class="overlay">게임 설명 ${gameId}</div>
+          <div class="overlay">${gameDescriptions[gameId] || ''}</div>
         </div>
         <div class="slots" style="grid-template-columns: repeat(${Math.min(total, 6)}, 1fr)"></div>
       `;
@@ -348,6 +356,7 @@
   </script>
 </body>
 </html>
+
 
 
 
