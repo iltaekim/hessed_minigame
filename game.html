@@ -48,7 +48,8 @@
     }
     .overlay {
       display: none; position: absolute; inset: 0; background-color: rgba(0,0,0,0.5);
-      color: white; justify-content: center; align-items: center; padding: 10px; text-align: center; font-size: 1.05em;
+      color: white; justify-content: center; align-items: center; padding: 15px; text-align: center;
+      font-size: 1.05em; line-height: 1.4; overflow-y:auto;
     }
     .game-image:hover .overlay { display: flex; }
     .slots {
@@ -93,7 +94,6 @@
 
   <div class="toolbar">
     <button class="btn" id="back">조 다시 선택</button>
-    <!-- 운영 편의용: 본인 선택만 일괄 해제 -->
     <button class="btn danger" id="clearMine">내 선택 전체 해제</button>
   </div>
 
@@ -114,13 +114,21 @@
   </div>
 
   <script>
-    // 1) 팀 미선택 방지
     const myTeam = localStorage.getItem('selectedTeam');
     if (!myTeam) {
       alert('먼저 조를 선택해주세요.');
       location.href = 'index.html';
     }
-    // 2) 게임별 설명 데이터
+
+    const gameNames = {
+      1:"릴레이 잠수 대결",
+      2:"단체 눈치 게임",
+      3:"풍선 서바이벌",
+      4:"히든 챌린지",
+      5:"바가지 참참참",
+      6:"계곡 비치발리볼"
+    };
+
     const gameDescriptions = {
       1: "🤿 릴레이 잠수 대결<br><br>팀원들이 차례대로 입수! 숨을 참으며 버티고 다음 주자에게 바통을 넘기세요! 마지막까지 물속을 지배하는 조가 궁극의 잠수왕에 등극합니다.",
       2: "👀 단체 눈치 게임<br><br>여러 조가 단체로 눈치게임을 시작! 심장이 쿵쿵~ 긴장되는 순간! 타이밍을 잘못 잡으면 바로 탈락~ 최후의 3인은 과연 누구? 그 사람들이 속한 조가 승리를 거머쥡니다!",
@@ -129,7 +137,7 @@
       5: "🥶 바가지 참참참<br><br>참참참에서 이기면 바가지 물싸다구! 지면 방어 가능~ 상대방 얼굴의 포스트잇을 떨어뜨리면 짜릿한 승리! 웃음과 물벼락이 동시에 터집니다.",
       6: "🏐 계곡 비치발리볼<br><br>물놀이에서 빠질 수 없는 비치발리볼~ 이번엔 계곡에서 즐겨볼까요?!"
     };
-    // 3) Firebase
+
     const firebaseConfig = {
       apiKey: "AIzaSyCdCPcboDLiOHz_-JZdEockQqxy3-ROMK8",
       authDomain: "hessed-minigame.firebaseapp.com",
@@ -142,21 +150,14 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 4) 팀 색상
-    const teamColors = {
-      1: '#e74c3c', 2: '#e67e22', 3: '#f1c40f',
-      4: '#2ecc71', 5: '#3498db', 6: '#34495e',
-      7: '#9b59b6', 8: '#fd79a8', 9: '#7f8c8d'
-    };
+    const teamColors = { 1:'#e74c3c', 2:'#e67e22', 3:'#f1c40f', 4:'#2ecc71', 5:'#3498db', 6:'#34495e', 7:'#9b59b6', 8:'#fd79a8', 9:'#7f8c8d' };
     const teamColor = teamColors[myTeam] || '#000';
 
-    // 5) 상태
-    let maxSelections = 4;                 // 기본값(실시간 config로 대체됨)
-    let slotConfig = { 1:4, 2:4, 3:4, 4:4, 5:4, 6:4 }; // 기본값(실시간 config로 대체됨)
-    let selections = {}; // selections[gameId] = [ {team,color} | null, ... ]
+    let maxSelections = 4;
+    let slotConfig = { 1:4, 2:4, 3:4, 4:4, 5:4, 6:4 };
+    let selections = {};
     let selectionCount = 0;
 
-    // 6) UI 엘리먼트
     const grid = document.getElementById('grid');
     const statusCount = document.getElementById('count');
     const statusMax = document.getElementById('max');
@@ -165,22 +166,16 @@
     const sumGames = document.getElementById('summary-games');
     const sumTeams = document.getElementById('summary-teams');
 
-    document.getElementById('back').addEventListener('click', () => {
-      location.href = 'index.html';
-    });
-
-    document.getElementById('clearMine').addEventListener('click', async () => {
-      // 내가 잡은 모든 슬롯을 해제
+    document.getElementById('back').onclick = () => location.href='index.html';
+    document.getElementById('clearMine').onclick = async () => {
       const updates = {};
       for (const g in selections) {
         selections[g].forEach((s, idx) => {
-          if (s && String(s.team) === String(myTeam)) {
-            updates[`selections/${g}/${idx}`] = null;
-          }
+          if (s && String(s.team) === String(myTeam)) updates[`selections/${g}/${idx}`] = null;
         });
       }
       await db.ref().update(updates);
-    });
+    };
 
     teamPill.innerHTML = `<span class="dot" style="background:${teamColor}"></span>${myTeam}조`;
 
@@ -190,112 +185,45 @@
       statusLeft.textContent = Math.max(0, maxSelections - selectionCount);
     };
 
-    const renderSummary = () => {
-      // 게임별
-      sumGames.innerHTML = '';
-      Object.keys(selections).sort((a,b)=>a-b).forEach(g => {
-        const teams = (selections[g] || []).map(s => s?.team).filter(Boolean);
-        const line = document.createElement('div');
-        line.className = 'sum-line';
-        const unique = [...new Set(teams)].map(t => `${t}조`).join(', ');
-        line.textContent = `게임 ${g}: ${unique || '선택 없음'}`;
-        sumGames.appendChild(line);
-      });
-
-      // 팀별 총합
-      const teamTotals = {};
-      Object.values(selections).forEach(arr => {
-        (arr || []).forEach(s => {
-          if (s?.team) {
-            teamTotals[s.team] = (teamTotals[s.team] || 0) + 1;
-          }
-        });
-      });
-      const tKeys = Object.keys(teamTotals).sort((a,b)=>Number(a)-Number(b));
-      sumTeams.innerHTML = '';
-      if (tKeys.length === 0) {
-        const line = document.createElement('div');
-        line.className = 'sum-line';
-        line.textContent = '아직 선택이 없습니다.';
-        sumTeams.appendChild(line);
-      } else {
-        tKeys.forEach(t => {
-          const line = document.createElement('div');
-          line.className = 'sum-line';
-          line.innerHTML = `<span class="dot" style="background:${teamColors[t]}"></span>${t}조: ${teamTotals[t]}개`;
-          sumTeams.appendChild(line);
-        });
-      }
-    };
-
     const attachSlotHandlers = (slotEl, gameId, slotIdx) => {
-      slotEl.addEventListener('click', async () => {
+      slotEl.onclick = async () => {
         const current = selections[gameId]?.[slotIdx] ?? null;
-
-        // 내 선택이면 해제 허용
         if (current && String(current.team) === String(myTeam)) {
           await db.ref(`selections/${gameId}/${slotIdx}`).set(null);
           return;
         }
-
-        // 이미 다른 팀이 차지한 슬롯이면 불가
-        if (current) {
-          alert('이미 선택된 슬롯입니다.');
-          return;
+        if (current) { alert('이미 선택된 슬롯입니다.'); return; }
+        if ((selections[gameId]||[]).some(s => s && String(s.team) === String(myTeam))) {
+          alert('같은 게임에서 중복 선택은 불가합니다.'); return;
         }
-
-        // 해당 게임에 이미 내가 선택한 슬롯이 있는지 확인(게임당 1슬롯 규칙 유지)
-        const hasMineInGame = (selections[gameId] || []).some(s => s && String(s.team) === String(myTeam));
-        if (hasMineInGame) {
-          alert('같은 게임에서 중복 선택은 불가합니다.');
-          return;
-        }
-
-        // 최대 선택 수 초과 방지
-        if (selectionCount >= maxSelections) {
-          alert('최대 선택 가능 수를 초과했습니다.');
-          return;
-        }
-
-        // 트랜잭션으로 원자적 점유 시도
+        if (selectionCount >= maxSelections) { alert('최대 선택 가능 수를 초과했습니다.'); return; }
         const ref = db.ref(`selections/${gameId}/${slotIdx}`);
         await ref.transaction(currentData => {
-          if (currentData === null) {
-            return { team: myTeam, color: teamColor };
-          }
-          return; // 다른 누군가가 이미 넣음 -> 취소
-        }, (error, committed) => {
-          if (error) {
-            console.error(error);
-            alert('선택 처리 중 오류가 발생했습니다.');
-          } else if (!committed) {
-            alert('다른 사용자가 방금 선택했습니다. 다시 시도해주세요.');
-          }
+          if (currentData === null) return { team: myTeam, color: teamColor };
+          return;
         });
-      }, { passive: true });
+      };
     };
 
     const buildCard = (gameId) => {
       const card = document.createElement('div');
       card.className = 'game-card';
-
       const used = (selections[gameId] || []).filter(Boolean).length;
       const total = slotConfig[gameId];
 
       card.innerHTML = `
         <div class="game-title">
-          <span>게임 ${gameId}</span>
+          <span>${gameNames[gameId] || `게임 ${gameId}`}</span>
           <span class="badge">참가팀 ${used}/${total}</span>
         </div>
         <div class="game-image">
-          <img src="images/game-${gameId}.png" alt="게임 ${gameId}" style="width:100%; height:100%; object-fit:cover;">
+          <img src="images/game-${gameId}.png" alt="${gameNames[gameId]}" style="width:100%; height:100%; object-fit:cover;">
           <div class="overlay">${gameDescriptions[gameId] || ''}</div>
         </div>
         <div class="slots" style="grid-template-columns: repeat(${Math.min(total, 6)}, 1fr)"></div>
       `;
 
       const slotsWrap = card.querySelector('.slots');
-      slotsWrap.innerHTML = '';
       for (let idx = 0; idx < total; idx++) {
         const slot = document.createElement('div');
         slot.className = 'slot';
@@ -303,9 +231,6 @@
         if (entry) {
           slot.style.backgroundColor = entry.color;
           slot.textContent = entry.team;
-          if (String(entry.team) === String(myTeam)) {
-            slot.dataset.owned = 'true';
-          }
         }
         attachSlotHandlers(slot, gameId, idx);
         slotsWrap.appendChild(slot);
@@ -316,32 +241,26 @@
     const renderAll = () => {
       grid.innerHTML = '';
       const gameIds = Object.keys(slotConfig).map(Number).sort((a,b)=>a-b);
-      for (const id of gameIds) {
+      gameIds.forEach(id => {
         if (!selections[id]) selections[id] = Array(slotConfig[id]).fill(null);
         grid.appendChild(buildCard(id));
-      }
-      // 내 전체 선택 수 계산
+      });
       selectionCount = 0;
       for (const g in selections) {
-        (selections[g] || []).forEach(s => {
-          if (s && String(s.team) === String(myTeam)) selectionCount++;
-        });
+        (selections[g]||[]).forEach(s => { if (s && String(s.team) === String(myTeam)) selectionCount++; });
       }
       updateStatus();
-      renderSummary();
     };
 
-    // 6) 실시간 리스너: config와 selections
     db.ref('config').on('value', snap => {
       const cfg = snap.val() || {};
       if (typeof cfg.maxSelections === 'number') maxSelections = cfg.maxSelections;
-      if (cfg.slotConfig && typeof cfg.slotConfig === 'object') slotConfig = cfg.slotConfig;
+      if (cfg.slotConfig) slotConfig = cfg.slotConfig;
       renderAll();
     });
 
     db.ref('selections').on('value', snapshot => {
       const data = snapshot.val() || {};
-      // selections 재구성 (config의 슬롯 수를 기준으로)
       const next = {};
       for (const gId of Object.keys(slotConfig)) {
         const total = slotConfig[gId];
@@ -351,14 +270,7 @@
       renderAll();
     });
 
-    // 초기 표시(혹시 config가 늦게 올 때를 대비한 안전장치)
     updateStatus();
   </script>
 </body>
 </html>
-
-
-
-
-
-
