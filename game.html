@@ -63,7 +63,6 @@
     }
     .slot:hover { transform: translateY(-1px); }
     .slot[data-locked="true"] { cursor: not-allowed; opacity: .7; }
-    .meta { padding: 0 14px 14px; color:#666; font-size: .95em; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
     .dot { width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:6px; vertical-align:middle; }
     #summary {
       margin-top: 28px; padding: 16px; background: #fff; border: 1px solid #ccc; border-radius: 10px;
@@ -114,12 +113,11 @@
   </div>
 
   <script>
+    // 팀 미선택 방지
     const myTeam = localStorage.getItem('selectedTeam');
-    if (!myTeam) {
-      alert('먼저 조를 선택해주세요.');
-      location.href = 'index.html';
-    }
+    if (!myTeam) { alert('먼저 조를 선택해주세요.'); location.href = 'index.html'; }
 
+    // 게임 이름 / 설명
     const gameNames = {
       1:"릴레이 잠수 대결",
       2:"단체 눈치 게임",
@@ -128,7 +126,6 @@
       5:"바가지 참참참",
       6:"계곡 비치발리볼"
     };
-
     const gameDescriptions = {
       1: "🤿 릴레이 잠수 대결<br><br>팀원들이 차례대로 입수! 숨을 참으며 버티고 다음 주자에게 바통을 넘기세요! 마지막까지 물속을 지배하는 조가 궁극의 잠수왕에 등극합니다.",
       2: "👀 단체 눈치 게임<br><br>여러 조가 단체로 눈치게임을 시작! 심장이 쿵쿵~ 긴장되는 순간! 타이밍을 잘못 잡으면 바로 탈락~ 최후의 3인은 과연 누구? 그 사람들이 속한 조가 승리를 거머쥡니다!",
@@ -138,6 +135,7 @@
       6: "🏐 계곡 비치발리볼<br><br>물놀이에서 빠질 수 없는 비치발리볼~ 이번엔 계곡에서 즐겨볼까요?!"
     };
 
+    // Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyCdCPcboDLiOHz_-JZdEockQqxy3-ROMK8",
       authDomain: "hessed-minigame.firebaseapp.com",
@@ -150,14 +148,17 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // 팀 색상
     const teamColors = { 1:'#e74c3c', 2:'#e67e22', 3:'#f1c40f', 4:'#2ecc71', 5:'#3498db', 6:'#34495e', 7:'#9b59b6', 8:'#fd79a8', 9:'#7f8c8d' };
     const teamColor = teamColors[myTeam] || '#000';
 
+    // 상태
     let maxSelections = 4;
     let slotConfig = { 1:4, 2:4, 3:4, 4:4, 5:4, 6:4 };
     let selections = {};
     let selectionCount = 0;
 
+    // UI
     const grid = document.getElementById('grid');
     const statusCount = document.getElementById('count');
     const statusMax = document.getElementById('max');
@@ -185,26 +186,76 @@
       statusLeft.textContent = Math.max(0, maxSelections - selectionCount);
     };
 
+    // 요약(게임별/팀별)
+    const renderSummary = () => {
+      // 게임별
+      sumGames.innerHTML = '';
+      const gameIds = Object.keys(slotConfig).map(Number).sort((a,b)=>a-b);
+      gameIds.forEach(gid => {
+        const arr = selections[gid] || [];
+        const pickedTeams = arr.map(s => s?.team).filter(Boolean).map(String);
+        const uniqueTeams = [...new Set(pickedTeams)];
+        const line = document.createElement('div');
+        line.className = 'sum-line';
+        const name = gameNames[gid] || `게임 ${gid}`;
+        line.textContent = uniqueTeams.length
+          ? `${name}: ${uniqueTeams.map(t => `${t}조`).join(', ')}`
+          : `${name}: 선택 없음`;
+        sumGames.appendChild(line);
+      });
+
+      // 팀별 총합
+      const totals = {};
+      gameIds.forEach(gid => {
+        (selections[gid] || []).forEach(s => {
+          if (s && s.team) totals[s.team] = (totals[s.team] || 0) + 1;
+        });
+      });
+      sumTeams.innerHTML = '';
+      const tKeys = Object.keys(totals).sort((a,b)=>Number(a)-Number(b));
+      if (!tKeys.length) {
+        const line = document.createElement('div');
+        line.className = 'sum-line';
+        line.textContent = '아직 선택이 없습니다.';
+        sumTeams.appendChild(line);
+      } else {
+        tKeys.forEach(t => {
+          const line = document.createElement('div');
+          line.className = 'sum-line';
+          line.innerHTML = `<span class="dot" style="background:${teamColors[t]}"></span>${t}조: ${totals[t]}개`;
+          sumTeams.appendChild(line);
+        });
+      }
+    };
+
+    // 슬롯 클릭 핸들러
     const attachSlotHandlers = (slotEl, gameId, slotIdx) => {
       slotEl.onclick = async () => {
         const current = selections[gameId]?.[slotIdx] ?? null;
+
         if (current && String(current.team) === String(myTeam)) {
           await db.ref(`selections/${gameId}/${slotIdx}`).set(null);
           return;
         }
         if (current) { alert('이미 선택된 슬롯입니다.'); return; }
-        if ((selections[gameId]||[]).some(s => s && String(s.team) === String(myTeam))) {
-          alert('같은 게임에서 중복 선택은 불가합니다.'); return;
-        }
+
+        const hasMineInGame = (selections[gameId] || []).some(s => s && String(s.team) === String(myTeam));
+        if (hasMineInGame) { alert('같은 게임에서 중복 선택은 불가합니다.'); return; }
+
         if (selectionCount >= maxSelections) { alert('최대 선택 가능 수를 초과했습니다.'); return; }
+
         const ref = db.ref(`selections/${gameId}/${slotIdx}`);
         await ref.transaction(currentData => {
           if (currentData === null) return { team: myTeam, color: teamColor };
           return;
+        }, (err, committed) => {
+          if (err) alert('선택 처리 중 오류가 발생했습니다.');
+          else if (!committed) alert('다른 사용자가 방금 선택했습니다. 다시 시도해주세요.');
         });
       };
     };
 
+    // 카드 빌드
     const buildCard = (gameId) => {
       const card = document.createElement('div');
       card.className = 'game-card';
@@ -238,6 +289,7 @@
       return card;
     };
 
+    // 전체 렌더
     const renderAll = () => {
       grid.innerHTML = '';
       const gameIds = Object.keys(slotConfig).map(Number).sort((a,b)=>a-b);
@@ -245,17 +297,20 @@
         if (!selections[id]) selections[id] = Array(slotConfig[id]).fill(null);
         grid.appendChild(buildCard(id));
       });
+      // 내 선택 수 재계산
       selectionCount = 0;
       for (const g in selections) {
-        (selections[g]||[]).forEach(s => { if (s && String(s.team) === String(myTeam)) selectionCount++; });
+        (selections[g] || []).forEach(s => { if (s && String(s.team) === String(myTeam)) selectionCount++; });
       }
       updateStatus();
+      renderSummary();  // ← 요약 갱신
     };
 
+    // 실시간 리스너
     db.ref('config').on('value', snap => {
       const cfg = snap.val() || {};
       if (typeof cfg.maxSelections === 'number') maxSelections = cfg.maxSelections;
-      if (cfg.slotConfig) slotConfig = cfg.slotConfig;
+      if (cfg.slotConfig && typeof cfg.slotConfig === 'object') slotConfig = cfg.slotConfig;
       renderAll();
     });
 
@@ -270,6 +325,8 @@
       renderAll();
     });
 
+    // 초기 표시
+    teamPill.innerHTML = `<span class="dot" style="background:${teamColor}"></span>${myTeam}조`;
     updateStatus();
   </script>
 </body>
