@@ -277,10 +277,10 @@
       card.innerHTML = `
         <div class="game-title">
           <span>게임 ${gameId}</span>
-          <span class="badge">점유 ${used}/${total}</span>
+          <span class="badge">참가팀 ${used}/${total}</span>
         </div>
         <div class="game-image">
-          이미지 ${gameId}
+          <img src="images/game-${gameId}.png" alt="게임 ${gameId}" style="width:100%; height:100%; object-fit:cover;">
           <div class="overlay">게임 설명 ${gameId}</div>
         </div>
         <div class="slots" style="grid-template-columns: repeat(${Math.min(total, 6)}, 1fr)"></div>
@@ -348,4 +348,5 @@
   </script>
 </body>
 </html>
+
 
