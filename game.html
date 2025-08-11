@@ -5,135 +5,123 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>게임 선택</title>
   <style>
+    :root { --card-gap: 28px; }
+    * { box-sizing: border-box; }
     body {
-      font-family: 'Arial', sans-serif;
-      margin: 0;
-      background-color: #f9f9f9;
-      padding: 20px;
-      font-size: 18px;
+      font-family: 'Arial', sans-serif; margin: 0; background-color: #f9f9f9;
+      padding: 18px; font-size: 17px; color:#222;
     }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 10px;
-      font-size: 2.2em;
+    header {
+      max-width: 1200px; margin: 0 auto 12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
     }
-
-    #status {
-      text-align: center;
-      font-size: 1.4em;
-      margin-bottom: 20px;
+    h1 { margin: 0; font-size: 1.9em; }
+    .pill {
+      background:#fff; border:1px solid #ddd; border-radius: 999px; padding: 8px 12px; font-weight: 700;
     }
-
+    #status { margin-left: auto; }
     .game-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 40px;
-      max-width: 1400px;
-      margin: 0 auto;
+      grid-template-columns: repeat(3, minmax(260px, 1fr));
+      gap: var(--card-gap);
+      max-width: 1200px; margin: 12px auto 0;
     }
-
+    @media (max-width: 980px) {
+      .game-grid { grid-template-columns: repeat(2, minmax(240px, 1fr)); }
+    }
+    @media (max-width: 640px) {
+      body { padding: 12px; }
+      .game-grid { grid-template-columns: 1fr; }
+      :root { --card-gap: 18px; }
+    }
     .game-card {
-      background: #fff;
-      border: 2px solid #ddd;
-      border-radius: 10px;
-      overflow: hidden;
-      position: relative;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      background: #fff; border: 1px solid #ddd; border-radius: 12px; overflow: hidden; position: relative;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      display: flex; flex-direction: column;
     }
-
     .game-title {
-      background: #333;
-      color: white;
-      padding: 18px;
-      text-align: center;
-      font-size: 1.8em;
-      font-weight: bold;
+      background: #333; color: white; padding: 14px 16px; font-size: 1.3em; font-weight: bold; display:flex; align-items:center; justify-content:space-between;
     }
-
+    .badge { font-size: .85em; background: rgba(255,255,255,.15); padding: 4px 8px; border-radius: 999px; }
     .game-image {
-      width: 100%;
-      height: 320px;
-      background: lightgray;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      position: relative;
-      font-size: 1.6em;
+      width: 100%; height: 220px; background: linear-gradient(180deg, #efefef, #e5e5e5);
+      display: flex; align-items: center; justify-content: center; position: relative; font-size: 1.2em; color:#666;
     }
-
-    .game-image:hover .overlay {
-      display: flex;
-    }
-
     .overlay {
-      display: none;
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: rgba(0, 0, 0, 0.6);
-      color: white;
-      justify-content: center;
-      align-items: center;
-      padding: 10px;
-      text-align: center;
-      font-size: 1.4em;
+      display: none; position: absolute; inset: 0; background-color: rgba(0,0,0,0.5);
+      color: white; justify-content: center; align-items: center; padding: 10px; text-align: center; font-size: 1.05em;
     }
-
+    .game-image:hover .overlay { display: flex; }
     .slots {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      padding: 20px;
+      display: grid; grid-template-columns: repeat(6, 1fr);
+      gap: 10px; padding: 14px; border-top:1px dashed #eee;
     }
-
     .slot {
-      width: 46px;
-      height: 46px;
-      border-radius: 4px;
-      background: #fff;
-      border: 1px solid #ccc;
-      cursor: pointer;
-      position: relative;
-      color: white;
-      font-size: 18px;
-      text-align: center;
-      line-height: 46px;
-      font-weight: bold;
+      height: 44px; border-radius: 8px; background: #fff; border: 1px solid #ccc; cursor: pointer; position: relative;
+      color: white; font-size: 16px; text-align: center; line-height: 44px; font-weight: 800; user-select:none;
+      transition: transform .08s;
     }
-
+    .slot:hover { transform: translateY(-1px); }
+    .slot[data-locked="true"] { cursor: not-allowed; opacity: .7; }
+    .meta { padding: 0 14px 14px; color:#666; font-size: .95em; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .dot { width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:6px; vertical-align:middle; }
     #summary {
-      margin-top: 40px;
-      padding: 16px;
-      background: #fff;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      max-width: 800px;
-      margin-left: auto;
-      margin-right: auto;
-      font-size: 1.2em;
+      margin-top: 28px; padding: 16px; background: #fff; border: 1px solid #ccc; border-radius: 10px;
+      max-width: 1200px; margin-left: auto; margin-right: auto; font-size: 1.02em;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
     }
-
-    #summary h2 {
-      text-align: center;
-    }
+    #summary h2 { margin: 0 0 10px; font-size: 1.3em; }
+    .sum-grid { display:grid; grid-template-columns: 1fr 320px; gap:18px; }
+    @media (max-width: 900px){ .sum-grid{ grid-template-columns: 1fr; } }
+    .sum-box { background:#fafafa; border:1px solid #eee; border-radius:10px; padding:12px; }
+    .sum-title { font-weight:800; margin-bottom:8px; }
+    .sum-line { padding:6px 0; border-bottom:1px dashed #eee; }
+    .sum-line:last-child { border-bottom:0; }
+    .toolbar { max-width: 1200px; margin: 8px auto 0; display:flex; gap:8px; align-items:center; flex-wrap:wrap; color:#666; }
+    .btn { padding: 10px 12px; border-radius: 8px; background:#fff; border:1px solid #ddd; cursor:pointer; font-weight:700; }
+    .btn.danger { border-color:#e74c3c; color:#e74c3c; }
   </style>
+
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
-  <h1>게임을 선택하세요</h1>
-  <div id="status">선택한 게임 수: <span id="count">0</span> / 4</div>
-  <div class="game-grid"></div>
+  <header>
+    <h1>게임을 선택하세요</h1>
+    <div class="pill" id="team-pill">-</div>
+    <div class="pill" id="status">선택: <span id="count">0</span> / <span id="max">-</span> (남은: <span id="left">-</span>)</div>
+  </header>
+
+  <div class="toolbar">
+    <button class="btn" id="back">조 다시 선택</button>
+    <!-- 운영 편의용: 본인 선택만 일괄 해제 -->
+    <button class="btn danger" id="clearMine">내 선택 전체 해제</button>
+  </div>
+
+  <div class="game-grid" id="grid"></div>
+
   <div id="summary">
     <h2>전체 선택 현황</h2>
-    <div id="summary-content"></div>
+    <div class="sum-grid">
+      <div class="sum-box">
+        <div class="sum-title">게임별</div>
+        <div id="summary-games"></div>
+      </div>
+      <div class="sum-box">
+        <div class="sum-title">팀별 총합</div>
+        <div id="summary-teams"></div>
+      </div>
+    </div>
   </div>
 
   <script>
+    // 1) 팀 미선택 방지
+    const myTeam = localStorage.getItem('selectedTeam');
+    if (!myTeam) {
+      alert('먼저 조를 선택해주세요.');
+      location.href = 'index.html';
+    }
+
+    // 2) Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyCdCPcboDLiOHz_-JZdEockQqxy3-ROMK8",
       authDomain: "hessed-minigame.firebaseapp.com",
@@ -146,119 +134,220 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // 3) 팀 색상
     const teamColors = {
       1: '#e74c3c', 2: '#e67e22', 3: '#f1c40f',
       4: '#2ecc71', 5: '#3498db', 6: '#34495e',
       7: '#9b59b6', 8: '#fd79a8', 9: '#7f8c8d'
     };
+    const teamColor = teamColors[myTeam] || '#000';
 
-    const slotConfig = {
-      1: 4,
-      2: 4,
-      3: 4,
-      4: 4,
-      5: 4,
-      6: 4
-    };
-
-    const myTeam = localStorage.getItem('selectedTeam');
-    const teamColor = teamColors[myTeam];
-    const maxSelections = 4;
+    // 4) 상태
+    let maxSelections = 4;                 // 기본값(실시간 config로 대체됨)
+    let slotConfig = { 1:4, 2:4, 3:4, 4:4, 5:4, 6:4 }; // 기본값(실시간 config로 대체됨)
+    let selections = {}; // selections[gameId] = [ {team,color} | null, ... ]
     let selectionCount = 0;
-    const selections = {};
+
+    // 5) UI 엘리먼트
+    const grid = document.getElementById('grid');
+    const statusCount = document.getElementById('count');
+    const statusMax = document.getElementById('max');
+    const statusLeft = document.getElementById('left');
+    const teamPill = document.getElementById('team-pill');
+    const sumGames = document.getElementById('summary-games');
+    const sumTeams = document.getElementById('summary-teams');
+
+    document.getElementById('back').addEventListener('click', () => {
+      location.href = 'index.html';
+    });
+
+    document.getElementById('clearMine').addEventListener('click', async () => {
+      // 내가 잡은 모든 슬롯을 해제
+      const updates = {};
+      for (const g in selections) {
+        selections[g].forEach((s, idx) => {
+          if (s && String(s.team) === String(myTeam)) {
+            updates[`selections/${g}/${idx}`] = null;
+          }
+        });
+      }
+      await db.ref().update(updates);
+    });
+
+    teamPill.innerHTML = `<span class="dot" style="background:${teamColor}"></span>${myTeam}조`;
 
     const updateStatus = () => {
-      document.getElementById('count').innerText = selectionCount;
+      statusCount.textContent = selectionCount;
+      statusMax.textContent = maxSelections;
+      statusLeft.textContent = Math.max(0, maxSelections - selectionCount);
     };
 
-    const updateSummary = () => {
-      const content = document.getElementById('summary-content');
-      content.innerHTML = '';
-      for (let game in selections) {
+    const renderSummary = () => {
+      // 게임별
+      sumGames.innerHTML = '';
+      Object.keys(selections).sort((a,b)=>a-b).forEach(g => {
+        const teams = (selections[g] || []).map(s => s?.team).filter(Boolean);
         const line = document.createElement('div');
-        const teams = (selections[game] || [])
-          .filter(Boolean)
-          .map(t => t.team ? `${t.team}조` : '')
-          .filter(t => t !== '')
-          .join(', ');
-        line.innerText = `게임 ${game}: ${teams || '선택 없음'}`;
-        content.appendChild(line);
-      }
-    };
+        line.className = 'sum-line';
+        const unique = [...new Set(teams)].map(t => `${t}조`).join(', ');
+        line.textContent = `게임 ${g}: ${unique || '선택 없음'}`;
+        sumGames.appendChild(line);
+      });
 
-    const saveSlotToDB = (gameId, slotIndex, team, color) => {
-      db.ref(`selections/${gameId}/${slotIndex}`).set(team ? { team, color } : null);
-    };
-
-    const createGameCards = () => {
-      const grid = document.querySelector('.game-grid');
-      grid.innerHTML = '';
-
-      for (let i = 1; i <= 6; i++) {
-        const card = document.createElement('div');
-        card.className = 'game-card';
-        card.innerHTML = `
-          <div class="game-title">게임 ${i}</div>
-          <div class="game-image">
-            이미지${i}
-            <div class="overlay">게임 설명 ${i}</div>
-          </div>
-          <div class="slots">
-            ${Array(slotConfig[i]).fill('').map((_, idx) => `<div class="slot" data-game="${i}" data-slot="${idx}"></div>`).join('')}
-          </div>
-        `;
-
-        const slots = card.querySelectorAll('.slot');
-        selections[i] = selections[i] || Array(slotConfig[i]).fill(null);
-
-        slots.forEach((slot, idx) => {
-          const team = selections[i][idx]?.team;
-          if (team) {
-            slot.style.backgroundColor = selections[i][idx].color;
-            slot.dataset.team = team;
-            slot.innerText = team;
-            if (team == myTeam) selectionCount++;
+      // 팀별 총합
+      const teamTotals = {};
+      Object.values(selections).forEach(arr => {
+        (arr || []).forEach(s => {
+          if (s?.team) {
+            teamTotals[s.team] = (teamTotals[s.team] || 0) + 1;
           }
-
-          slot.addEventListener('click', () => {
-            if (slot.dataset.team === myTeam) {
-              slot.style.backgroundColor = '#fff';
-              slot.innerText = '';
-              delete slot.dataset.team;
-              selections[i][idx] = null;
-              selectionCount--;
-              saveSlotToDB(i, idx, null, null);
-            } else if (!slot.dataset.team && !selections[i].some(s => s?.team == myTeam)) {
-              if (selectionCount >= maxSelections) {
-                alert('최대 선택 가능 수를 초과했습니다.');
-                return;
-              }
-              slot.style.backgroundColor = teamColor;
-              slot.dataset.team = myTeam;
-              slot.innerText = myTeam;
-              selections[i][idx] = { team: myTeam, color: teamColor };
-              selectionCount++;
-              saveSlotToDB(i, idx, myTeam, teamColor);
-            }
-            updateStatus();
-            updateSummary();
-          });
         });
-
-        grid.appendChild(card);
+      });
+      const tKeys = Object.keys(teamTotals).sort((a,b)=>Number(a)-Number(b));
+      sumTeams.innerHTML = '';
+      if (tKeys.length === 0) {
+        const line = document.createElement('div');
+        line.className = 'sum-line';
+        line.textContent = '아직 선택이 없습니다.';
+        sumTeams.appendChild(line);
+      } else {
+        tKeys.forEach(t => {
+          const line = document.createElement('div');
+          line.className = 'sum-line';
+          line.innerHTML = `<span class="dot" style="background:${teamColors[t]}"></span>${t}조: ${teamTotals[t]}개`;
+          sumTeams.appendChild(line);
+        });
       }
     };
+
+    const attachSlotHandlers = (slotEl, gameId, slotIdx) => {
+      slotEl.addEventListener('click', async () => {
+        const current = selections[gameId]?.[slotIdx] ?? null;
+
+        // 내 선택이면 해제 허용
+        if (current && String(current.team) === String(myTeam)) {
+          await db.ref(`selections/${gameId}/${slotIdx}`).set(null);
+          return;
+        }
+
+        // 이미 다른 팀이 차지한 슬롯이면 불가
+        if (current) {
+          alert('이미 선택된 슬롯입니다.');
+          return;
+        }
+
+        // 해당 게임에 이미 내가 선택한 슬롯이 있는지 확인(게임당 1슬롯 규칙 유지)
+        const hasMineInGame = (selections[gameId] || []).some(s => s && String(s.team) === String(myTeam));
+        if (hasMineInGame) {
+          alert('같은 게임에서 중복 선택은 불가합니다.');
+          return;
+        }
+
+        // 최대 선택 수 초과 방지
+        if (selectionCount >= maxSelections) {
+          alert('최대 선택 가능 수를 초과했습니다.');
+          return;
+        }
+
+        // 트랜잭션으로 원자적 점유 시도
+        const ref = db.ref(`selections/${gameId}/${slotIdx}`);
+        await ref.transaction(currentData => {
+          if (currentData === null) {
+            return { team: myTeam, color: teamColor };
+          }
+          return; // 다른 누군가가 이미 넣음 -> 취소
+        }, (error, committed) => {
+          if (error) {
+            console.error(error);
+            alert('선택 처리 중 오류가 발생했습니다.');
+          } else if (!committed) {
+            alert('다른 사용자가 방금 선택했습니다. 다시 시도해주세요.');
+          }
+        });
+      }, { passive: true });
+    };
+
+    const buildCard = (gameId) => {
+      const card = document.createElement('div');
+      card.className = 'game-card';
+
+      const used = (selections[gameId] || []).filter(Boolean).length;
+      const total = slotConfig[gameId];
+
+      card.innerHTML = `
+        <div class="game-title">
+          <span>게임 ${gameId}</span>
+          <span class="badge">점유 ${used}/${total}</span>
+        </div>
+        <div class="game-image">
+          이미지 ${gameId}
+          <div class="overlay">게임 설명 ${gameId}</div>
+        </div>
+        <div class="slots" style="grid-template-columns: repeat(${Math.min(total, 6)}, 1fr)"></div>
+        <div class="meta">
+          <span class="dot" style="background:${teamColor}"></span>내 팀: ${myTeam}조
+        </div>
+      `;
+
+      const slotsWrap = card.querySelector('.slots');
+      slotsWrap.innerHTML = '';
+      for (let idx = 0; idx < total; idx++) {
+        const slot = document.createElement('div');
+        slot.className = 'slot';
+        const entry = selections[gameId]?.[idx] || null;
+        if (entry) {
+          slot.style.backgroundColor = entry.color;
+          slot.textContent = entry.team;
+          if (String(entry.team) === String(myTeam)) {
+            slot.dataset.owned = 'true';
+          }
+        }
+        attachSlotHandlers(slot, gameId, idx);
+        slotsWrap.appendChild(slot);
+      }
+      return card;
+    };
+
+    const renderAll = () => {
+      grid.innerHTML = '';
+      const gameIds = Object.keys(slotConfig).map(Number).sort((a,b)=>a-b);
+      for (const id of gameIds) {
+        if (!selections[id]) selections[id] = Array(slotConfig[id]).fill(null);
+        grid.appendChild(buildCard(id));
+      }
+      // 내 전체 선택 수 계산
+      selectionCount = 0;
+      for (const g in selections) {
+        (selections[g] || []).forEach(s => {
+          if (s && String(s.team) === String(myTeam)) selectionCount++;
+        });
+      }
+      updateStatus();
+      renderSummary();
+    };
+
+    // 6) 실시간 리스너: config와 selections
+    db.ref('config').on('value', snap => {
+      const cfg = snap.val() || {};
+      if (typeof cfg.maxSelections === 'number') maxSelections = cfg.maxSelections;
+      if (cfg.slotConfig && typeof cfg.slotConfig === 'object') slotConfig = cfg.slotConfig;
+      renderAll();
+    });
 
     db.ref('selections').on('value', snapshot => {
       const data = snapshot.val() || {};
-      for (let i = 1; i <= 6; i++) {
-        selections[i] = Array.from({ length: slotConfig[i] }, (_, idx) => data[i]?.[idx] ?? null);
+      // selections 재구성 (config의 슬롯 수를 기준으로)
+      const next = {};
+      for (const gId of Object.keys(slotConfig)) {
+        const total = slotConfig[gId];
+        next[gId] = Array.from({ length: total }, (_, idx) => data[gId]?.[idx] ?? null);
       }
-      selectionCount = 0;
-      createGameCards();
-      updateStatus();
-      updateSummary();
+      selections = next;
+      renderAll();
     });
+
+    // 초기 표시(혹시 config가 늦게 올 때를 대비한 안전장치)
+    updateStatus();
   </script>
 </body>
 </html>
